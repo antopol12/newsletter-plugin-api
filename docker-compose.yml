@@ -1,0 +1,24 @@
+version: '3.5'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /var/www/html
+    container_name: newsletter-plugin-api
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "${SERVER_PORT}:80"
+    extra_hosts:
+      - "localhots:127.0.0.1"
+    networks:
+      - newsletter-plugin-api-net
+
+networks:
+  newsletter-plugin-api-net:
+    external:
+      name: ctdesarrollo-with-vpn
+
+# add the custom network for vpn compatibility sudo docker network create ctdesarrollo-with-vpn --subnet 10.0.1.0/24

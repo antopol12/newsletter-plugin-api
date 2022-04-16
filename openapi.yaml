@@ -1,0 +1,335 @@
+openapi: 3.0.0
+
+info:
+  title: The Newsletter Plugin API
+  description: The Newsletter Plugin API
+  version: 1.0.0
+  contact:
+    email: "anthony.galarza@funiber.org"
+
+servers:
+  - url: 'http://localhost:8001/v1/'
+    description: Development
+    variables:
+      protocol:
+        enum:
+          - http
+        default: http
+
+security:
+  - BasicAuth: [ ]
+
+tags:
+  - name: "lists"
+    description: "Everything about your Lists"
+  - name: "subscribers"
+    description: "Everything about your subscribers"
+  - name: "newsletters"
+    description: "Everything about your newsletters"
+
+paths:
+  /lists/findEmpty:
+    get:
+      tags:
+        - lists
+      responses:
+        '200':
+          description: a JSON Array of lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lists'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /lists/findByNewsletterSent:
+    get:
+      tags:
+        - lists
+      responses:
+        '200':
+          description: a JSON Array of lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lists'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /subscribers:
+    post:
+      tags:
+        - subscribers
+      summary: Create subscriber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Subscriber'
+      responses:
+        '201':
+          description: Succesfully created subscriber
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '400':
+          $ref: '#/components/responses/EmailAlreadyExists'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /subscribers/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - subscribers
+      summary: Get subscriber by id
+      responses:
+        '200':
+          description: a JSON Array of lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /subscribers/findByEmail/{email}:
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - subscribers
+      summary: Get subscriber by id
+      responses:
+        '200':
+          description: a JSON Array of lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscriber'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /subscribers/findByList/{idList}:
+    summary: Subscriber
+    parameters:
+      - name: idList
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - subscribers
+      summary: Get subscribers by list
+      responses:
+        '200':
+          description: Sucessfully getted subscribers
+        '400':
+          $ref: '#/components/responses/ListEmpty'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    delete:
+      tags:
+        - subscribers
+      summary: Delete subscribers by list
+      responses:
+        '200':
+          description: Sucessfully deleted subscribers
+        '400':
+          $ref: '#/components/responses/ListEmpty'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /newsletters:
+    post:
+      tags:
+        - newsletters
+      summary: Create newsletter by list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Newsletter'
+      responses:
+        '201':
+          description: Sucessfully created newsletter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Newsletter'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /newsletters/createByEmptyList:
+    post:
+      tags:
+        - newsletters
+      summary: Create newsletter
+      responses:
+        '201':
+          description: Sucessfully created newsletter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Newsletter'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /newsletters/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - newsletters
+      summary: Get newsletter by list
+      responses:
+        '200':
+          description: a JSON Array of lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Newsletter'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+components:
+
+  schemas:
+    List:
+      description: Subscriber list item
+      type: object
+      properties:
+        id:
+          description: Id list
+          type: integer
+          minimum: 1
+          maximum: 40
+      required:
+        - id
+
+    Lists:
+      description: Lists
+      type: array
+      items:
+        $ref: '#/components/schemas/List'
+
+    Subscriber:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Subscriber id
+          readOnly: true
+        email:
+          type: string
+          format: email
+          description: Subscriber email
+        first_name:
+          type: string
+          nullable: true
+          description: Subscriber first name
+        last_name:
+          type: string
+          nullable: true
+          description: Subscriber last name
+        country:
+          type: string
+          nullable: true
+          description: Subscriber country in ISO 3166-1 alpha-2 format
+          minLength: 0
+          maxLength: 2
+        region:
+          type: string
+          nullable: true
+          description: Subscriber region
+        city:
+          type: string
+          nullable: true
+          description: Subscriber city
+        lists:
+          $ref: '#/components/schemas/Lists'
+        status:
+          $ref: '#/components/schemas/SubscriberStatus'
+      required:
+        - id
+        - email
+
+    SubscriberStatus:
+      type: string
+      default: 'confirmed'
+      enum:
+        - confirmed
+        - not_confirmed
+        - unsubscribed
+        - bounced
+        - complained
+
+    Newsletter:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Newsletter id
+          readOnly: true
+        subject:
+          type: string
+          description: Email subject
+        html_content:
+          type: string
+          description: HTML email content
+        plain_content:
+          type: string
+          description: Plain text email content
+        list:
+          $ref: '#/components/schemas/List'
+        status:
+          $ref: '#/components/schemas/NewsletterStatus'
+        send_on:
+          type: string
+          format: date-time
+          description: Plain text email content
+
+    NewsletterStatus:
+      type: string
+      default: 'sending'
+      enum:
+        - new
+        - sending
+        - sent
+        - paused
+        - error
+
+  responses:
+    BadRequest:
+      description: Bad Request
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      headers:
+        WWW_Authenticate:
+          schema:
+            type: string
+    ListEmpty:
+      description: List is empty
+    EmailAlreadyExists:
+      description: Email address already exists
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
